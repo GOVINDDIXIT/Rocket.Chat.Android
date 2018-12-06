@@ -60,6 +60,7 @@ class MembersPresenter @Inject constructor(
 
     fun toMemberDetails(memberUiModel: MemberUiModel) {
         navigator.toMemberDetails(
+            memberUiModel.userId,
             memberUiModel.avatarUri.toString(),
             memberUiModel.realName.toString(),
             "@${memberUiModel.username}",
