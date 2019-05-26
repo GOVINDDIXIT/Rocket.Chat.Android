@@ -9,6 +9,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: "com.github.ben-manes.versions"
+apply plugin: 'jacoco-android'
 
 android {
     compileSdkVersion versions.compileSdk
@@ -42,6 +43,11 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.returnDefaultValues = true
     }
 
     signingConfigs {
@@ -184,6 +190,20 @@ dependencies {
     testImplementation libraries.truth
     androidTestImplementation libraries.espressoCore
     androidTestImplementation libraries.espressoIntents
+    implementation libraries.espressoIdling
+    testImplementation libraries.mockito
+    testImplementation libraries.mockitoInline
+    androidTestImplementation libraries.mockitoAndroid
+    testImplementation libraries.roboelectric
+
+}
+
+tasks.withType(Test) {
+    testLogging {
+        exceptionFormat "full"
+        events "passed", "failed"
+        showStandardStreams true
+    }
 }
 
 androidExtensions {
