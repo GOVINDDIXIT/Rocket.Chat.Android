@@ -148,9 +148,9 @@ jobs:
           destination: apks
   run-ui-tests:
     docker:
-      - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
+      - image: circleci/android:api-28-alpha
     environment:
-      JAVA_TOOL_OPTIONS: -Xms512m
+      JAVA_TOOL_OPTIONS: -Xmx5024m
     steps:
       - checkout
       - run:
@@ -205,22 +205,5 @@ jobs:
 workflows:
   version: 2
   build-deploy:
-    jobs:
-      - build-kotlin-sdk
-      - run-unit-tests:
-          requires:
-            - build-kotlin-sdk
-          filters:
-            branches:
-              ignore: # skip on merge commits.
-                - develop-2.x
-                - master
-      - run-ui-tests:
-          requires:
-            - build-kotlin-sdk
-      - build-play-apk:
-          requires:
-            - build-kotlin-sdk
-      - build-foss-apk:
-          requires:
-            - build-kotlin-sdk
+    jobs:    
+      - run-unit-tests
