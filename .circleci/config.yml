@@ -62,10 +62,10 @@ jobs:
           command: ./gradlew --no-daemon lint
       - run:
           name: Run Unit test
-          command: ./gradlew --no-daemon test
+          command: ./gradlew --no-daemon gradlew testPlayDebugUnitTest
       - run:
           name: Generate reports
-          command: ./gradlew jacocoTestReport
+          command: ./gradlew jacocoTestPlayDebugUnitTestReport
       - run:
           name: Send coverage
           command: bash <(curl -s https://codecov.io/bash)
@@ -150,8 +150,8 @@ jobs:
     docker:
       - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
     environment:
-      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"'
-      TEST_FLAGS: "--configure-on-demand -PdisablePreDex"
+      JVM_OPTS: -Xmx2048m
+      GRADLE_OPTS: -Xmx1536m -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.caching=true -Dorg.gradle.configureondemand=true -Dkotlin.compiler.execution.strategy=in-process -Dkotlin.incremental=false
     steps:
       - checkout
       - run:
@@ -196,7 +196,7 @@ jobs:
             adb shell input keyevent 82
       - run:
           name: Run EspressoTests
-          command: ./gradlew connectedAndroidTest
+          command: ./gradlew createPlayDebugCoverageReport
       - store_artifacts:
           path: app/build/reports
           destination: reports
