@@ -22,7 +22,6 @@ import org.junit.Test
 @LargeTest
 class RegisterUsernameFragmentTest {
 
-
     @JvmField
     var activityRule = ActivityTestRule(AuthenticationActivity::class.java, true, true)
 
