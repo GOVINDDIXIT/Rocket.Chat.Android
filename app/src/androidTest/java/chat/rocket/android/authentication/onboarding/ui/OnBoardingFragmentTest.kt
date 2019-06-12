@@ -46,7 +46,7 @@ class OnBoardingFragmentTest {
 
     @Test
     fun check_create_new_server_click() {
-        onView(withId(R.id.create_server_container)).check(matches(isDisplayed()))
+        onView(withId(R.id.create_server_container))
             .perform(scrollTo(), click())
     }
 }

@@ -20,7 +20,7 @@ class LoginOptionsFragmentTest {
 
     @Before
     fun setUp() {
-        onView(withId(R.id.join_community_container)).check(matches(isDisplayed()))
+        onView(withId(R.id.join_community_container))
             .perform(scrollTo(), click())
         Thread.sleep(5000)
     }
