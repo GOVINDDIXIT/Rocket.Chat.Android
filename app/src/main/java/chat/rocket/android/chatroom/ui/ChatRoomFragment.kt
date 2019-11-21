@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
@@ -67,6 +68,7 @@ import chat.rocket.android.helper.AndroidPermissionsHelper.hasWriteExternalStora
 import chat.rocket.android.helper.EndlessRecyclerViewScrollListener
 import chat.rocket.android.helper.KeyboardHelper
 import chat.rocket.android.helper.MessageParser
+import chat.rocket.android.sharehadler.ShareHandler
 import chat.rocket.android.util.extension.asObservable
 import chat.rocket.android.util.extension.createImageFile
 import chat.rocket.android.util.extensions.circularRevealOrUnreveal
@@ -82,8 +84,11 @@ import chat.rocket.android.util.extensions.textContent
 import chat.rocket.android.util.extensions.ui
 import chat.rocket.common.model.RoomType
 import chat.rocket.common.model.roomTypeOf
+import chat.rocket.common.util.ifNull
 import chat.rocket.core.internal.realtime.socket.model.State
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.snackbar.Snackbar
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Observable
@@ -103,6 +108,9 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
+
+// WIDECHAT
+import chat.rocket.android.helper.Constants
 
 fun newInstance(
     chatRoomId: String,
@@ -317,18 +325,23 @@ class ChatRoomFragment : Fragment(), ChatRoomView, EmojiKeyboardListener, EmojiR
         setupActionSnackbar()
         with(activity as ChatRoomActivity) {
             setupToolbarTitle(chatRoomName)
-            setupExpandMoreForToolbar {
-                presenter.toChatDetails(
-                    chatRoomId,
-                    chatRoomType,
-                    isSubscribed,
-                    isFavorite,
-                    disableMenu
-                )
+            if (Constants.WIDECHAT && chatRoomType == "d") {
+                hideExpandMoreForToolbar()
+            } else {
+                setupExpandMoreForToolbar {
+                    presenter.toChatDetails(
+                            chatRoomId,
+                            chatRoomType,
+                            isSubscribed,
+                            isFavorite,
+                            disableMenu
+                    )
+                }
             }
         }
         getDraftMessage()
         subscribeComposeTextMessage()
+        handleShareIntent()
 
         analyticsManager.logScreenView(ScreenViewEvent.ChatRoom)
     }
@@ -424,6 +437,8 @@ class ChatRoomFragment : Fragment(), ChatRoomView, EmojiKeyboardListener, EmojiR
                         prevMessageUiModel = msgModel
                     }
                 }
+                val lastMsgModel = dataSet[dataSet.lastIndex]
+                lastMsgModel.showDayMarker = true
             }
 
             val oldMessagesCount = adapter.itemCount
@@ -435,6 +450,11 @@ class ChatRoomFragment : Fragment(), ChatRoomView, EmojiKeyboardListener, EmojiR
             empty_chat_view.isVisible = adapter.itemCount == 0
             dismissEmojiKeyboard()
         }
+    }
+
+    // WIDECHAT
+    override fun notifyAdapter() {
+        endlessRecyclerViewScrollListener.incrementPage(recycler_view)
     }
 
     override fun showSearchedMessages(dataSet: List<BaseUiModel<*>>) {
@@ -900,10 +920,12 @@ class ChatRoomFragment : Fragment(), ChatRoomView, EmojiKeyboardListener, EmojiR
 
             button_take_a_photo.setOnClickListener {
                 context?.let {
-                    if (AndroidPermissionsHelper.hasCameraPermission(it)) {
-                        dispatchTakePictureIntent()
-                    } else {
-                        AndroidPermissionsHelper.getCameraPermission(this)
+                    if (AndroidPermissionsHelper.hasCameraFeature(it)) {
+                        if (AndroidPermissionsHelper.hasCameraPermission(it)) {
+                            dispatchTakePictureIntent()
+                        } else {
+                            AndroidPermissionsHelper.getCameraPermission(this)
+                        }
                     }
                 }
                 handler.postDelayed({
@@ -1232,6 +1254,24 @@ class ChatRoomFragment : Fragment(), ChatRoomView, EmojiKeyboardListener, EmojiR
         if (::emojiKeyboardPopup.isInitialized) {
             emojiKeyboardPopup.dismiss()
             setReactionButtonIcon(R.drawable.ic_reaction_24dp)
+        }
+    }
+
+    private fun handleShareIntent() {
+        if (ShareHandler.hasShare()) {
+            if (ShareHandler.hasSharedText()) {
+                sendMessage(ShareHandler.getTextAndClear())
+            }
+
+            if (ShareHandler.hasSharedFile()) {
+                ShareHandler.files.forEach { file ->
+                    presenter.uploadSharedFile(
+                        chatRoomId,
+                        file
+                    )
+                }
+                ShareHandler.files.clear()
+            }
         }
     }
 }

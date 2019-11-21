@@ -1,5 +1,6 @@
 package chat.rocket.android.chatroom.presentation
 
+import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import chat.rocket.android.R
@@ -10,13 +11,13 @@ import chat.rocket.android.chatroom.ui.chatRoomIntent
 import chat.rocket.android.favoritemessages.ui.TAG_FAVORITE_MESSAGES_FRAGMENT
 import chat.rocket.android.files.ui.TAG_FILES_FRAGMENT
 import chat.rocket.android.inviteusers.ui.TAG_INVITE_USERS_FRAGMENT
+import chat.rocket.android.main.ui.MainActivity
 import chat.rocket.android.members.ui.TAG_MEMBERS_FRAGMENT
 import chat.rocket.android.mentions.ui.TAG_MENTIONS_FRAGMENT
 import chat.rocket.android.pinnedmessages.ui.TAG_PINNED_MESSAGES_FRAGMENT
 import chat.rocket.android.server.ui.changeServerIntent
 import chat.rocket.android.userdetails.ui.TAG_USER_DETAILS_FRAGMENT
 import chat.rocket.android.util.extensions.addFragmentBackStack
-import chat.rocket.android.videoconference.ui.videoConferenceIntent
 
 class ChatRoomNavigator(internal val activity: ChatRoomActivity) {
 
@@ -29,7 +30,7 @@ class ChatRoomNavigator(internal val activity: ChatRoomActivity) {
     fun toVideoConference(chatRoomId: String, chatRoomType: String) {
         // TODO: Jitsi isn't working with Android M- version. We need to remove the condition bellow after it's solved. (https://github.com/jitsi/jitsi-meet/pull/3967)/
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            activity.startActivity(activity.videoConferenceIntent(chatRoomId, chatRoomType))
+            //activity.startActivity(activity.videoConferenceIntent(chatRoomId, chatRoomType))
         } else {
             Toast.makeText(
                 activity,
@@ -159,5 +160,11 @@ class ChatRoomNavigator(internal val activity: ChatRoomActivity) {
     fun toMessageInformation(messageId: String) {
         activity.startActivity(activity.messageInformationIntent(messageId = messageId))
         activity.overridePendingTransition(R.anim.open_enter, R.anim.open_exit)
+    }
+
+    fun toChatRooms() {
+        activity.startActivity(Intent(activity, MainActivity::class.java).also {
+            it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        })
     }
 }
